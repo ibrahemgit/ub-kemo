@@ -140,36 +140,33 @@ $('.gallry_logos').slick({
 });
 
 
-
-	
-  $('.contact_us .submit, .msvh_submit-btn').on('click', function(event) {
-      event.preventDefault();
+$('.contact_us .submit, .msvh_submit-btn, .submit-button').on('click', function(event) {
+    event.preventDefault();
 
     var form = $(this).closest('form'); 
 
-      // التحقق من صحة النموذج قبل الإرسال
-      if (!form[0].checkValidity()) {
-          form[0].reportValidity(); // عرض رسائل التنبيه الافتراضية للمتصفح
-          return; // إيقاف التنفيذ إذا كان هناك خطأ
-      }
+    // التحقق من صحة النموذج قبل الإرسال
+    if (!form[0].checkValidity()) {
+        form[0].reportValidity(); // عرض رسائل التنبيه الافتراضية للمتصفح
+        return; // إيقاف التنفيذ إذا كان هناك خطأ
+    }
 
     var phone = form.find('input[name="phone"]').val().trim();
-	  
+      
     var phonePattern = /^[+\d]+$/; // يسمح فقط بالأرقام وحرف +
 
     if (!phonePattern.test(phone) || phone.length < 10) {
         alert('يجب إدخال رقم هاتف صالح .');
         return; // إيقاف التنفيذ إذا كان الرقم غير صالح
     }
-	  
-	      function cleanURL(url) {
+      
+    function cleanURL(url) {
         var urlObj = new URL(url);
         var paramsToRemove = ["utm_medium", "utm_source", "utm_id", "utm_content", "utm_term", "utm_campaign", "fbclid"];
         paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
         return urlObj.origin + urlObj.pathname;
     }
 
-	  
     var ifprshorshort = form.hasClass('prshorshort');
     var ifunitform = form.hasClass('unform');
     var timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -178,69 +175,85 @@ $('.gallry_logos').slick({
     var pageTitle = PTitle + "\n -- \n" + pUrl;
     var post_id = $('body').attr('id');
     
+    // جمع بيانات الفورم مع التعامل مع الحقول الجديدة
     var formData = {
         action: 'submit_contact_form', 
-        name: form.find('input[name="name"]').val(), 
-        message: form.find('textarea[name="message"]').val(), 
-        phone: form.find('input[name="phone"]').val(), 
-        email: form.find('input[name="email"]').val(), 
-        preferred_time: form.find('select[name="selc-time"]').val(), 
-        preferred_time: form.find('select[name="selc-time"]').val(), 
+        // الحقول الأساسية
+        name: form.find('input[name="name"]').val() || '', 
+        phone: form.find('input[name="phone"]').val() || '', 
+        email: form.find('input[name="email"]').val() || '', 
+        message: form.find('textarea[name="message"]').val() || '', 
+        
+        // حقول السيليكت المختلفة
+        preferred_time: form.find('select[name="preferred_time"]').val() || form.find('select[name="selc-time"]').val() || '', 
+        unit_type: form.find('select[name="unit_type"]').val() || '', 
+        
+        // حقل السعر الجديد
+        price: form.find('input[name="price"]').val() || '', 
+        
+        // الحقول القديمة (للتوافق مع الأنظمة القديمة)
         contact: form.find('input[name="contact[]"]:checked').map(function() {
-          return $(this).val();
+            return $(this).val();
         }).get(),
+        
+        // معلومات إضافية
         is_prshorshort: ifprshorshort ? "1" : "0",
         is_unitform: ifunitform ? "1" : "0",
         timeZone: timeZone,
         pageTitle: pageTitle,
         post_id: post_id, 
     };
-  
 
-
-    
+    // إرسال بيانات مبسطة لـ Google Form
     $.ajax({
-      url: ajax_object.ajax_url,
-      type: 'POST',
-      dataType: 'json',
-      data: {
-          action: 'submit_to_google_form_action',
-          name: formData.name,
-          phone: formData.phone,
-          title: PTitle,
-          url: pUrl,
-          zone : timeZone,
-          team: ajax_object.author_name,
-      },
-      success: function(response) {
-      },
-      error: function(xhr, status, error) {
-      }
+        url: ajax_object.ajax_url,
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            action: 'submit_to_google_form_action',
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            unit_type: formData.unit_type,
+            price: formData.price,
+            preferred_time: formData.preferred_time,
+            title: PTitle,
+            url: pUrl,
+            zone: timeZone,
+            team: ajax_object.author_name,
+        },
+        success: function(response) {
+            console.log('Google Form submitted successfully:', response);
+        },
+        error: function(xhr, status, error) {
+            console.log('Google Form submission error:', error);
+        }
     });
-    
 
-
+    // إرسال البيانات الكاملة للسيرفر الرئيسي
     $.ajax({
         url: ajax_object.ajax_url,
         type: 'POST',
         data: formData,
         success: function(response) {
-          
-          form.find('input[type="text"], input[type="phone"]').val('');
+            console.log('Main form submitted successfully:', response);
+            
+            // مسح جميع الحقول بعد الإرسال الناجح
+            form.find('input[type="text"], input[type="tel"], input[type="phone"], input[type="email"], textarea').val('');
+            form.find('select').prop('selectedIndex', 0);
+            form.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
 
-          if (ajax_object.thank_you_url) {
-            window.location.href = ajax_object.thank_you_url;
-          }
-          
+            // التوجيه لصفحة الشكر إذا كانت متاحة
+            if (ajax_object.thank_you_url) {
+                window.location.href = ajax_object.thank_you_url;
+            }
         },
         error: function(xhr, status, error) {
+            console.log('Main form submission error:', error);
+            alert('حدث خطأ أثناء إرسال النموذج. يرجى المحاولة مرة أخرى.');
         }
     });
-
-
-
-
-  });
+});
   
 
   $('.mobile-menu').on('click', function() {

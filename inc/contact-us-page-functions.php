@@ -1,11 +1,5 @@
 <?php 
 
-
-
-
-
-
-
 #############################
 ####  AJAX
 #############################
@@ -18,8 +12,6 @@ function handle_contact_form() {
             wp_die();
         }
 
-
-
         $name = sanitize_text_field($_POST['name'] ?? "");
         $phone = sanitize_text_field($_POST['phone']?? "") ;
         $email = sanitize_email($_POST['email'] ?? "");
@@ -29,6 +21,14 @@ function handle_contact_form() {
         $pageTitle  = sanitize_textarea_field($_POST['pageTitle']?? "") ;
         $contact_methods = !empty($_POST['contact']) ? implode(", ", array_map('sanitize_text_field', $_POST['contact'])) : 'لم يتم اختيار طريقه للتواصل';
         $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+        
+        // الحقول الجديدة
+        $unit_type = sanitize_text_field($_POST['unit_type'] ?? "");
+        $price = sanitize_text_field($_POST['price'] ?? "");
+        
+        // الحقول الجديدة
+        $unit_type = sanitize_text_field($_POST['unit_type'] ?? "");
+        $price = sanitize_text_field($_POST['price'] ?? "");
 
         $enable_contact = get_post_meta($post_id, 'enable_contact', true);
 
@@ -43,11 +43,24 @@ function handle_contact_form() {
             $body .= "رقم الهاتف: $phone\n";
             $body .= "الدولة: $timeZone\n";
             $body .= "اسم الصفحة: $pageTitle\n";
+            // إضافة الحقول الجديدة للفورم المختصر
+            if (!empty($unit_type)) {
+                $body .= "نوع الوحدة: $unit_type\n";
+            }
+            if (!empty($price)) {
+                $body .= "السعر: $price\n";
+            }
         } elseif(isset($_POST['is_unitform']) && $_POST['is_unitform'] === "1"){
             $body .= "رقم الهاتف: $phone\n";
             $body .= "الدولة: $timeZone\n";
             $body .= "اسم الصفحة: $pageTitle\n";
-
+            // إضافة الحقول الجديدة لفورم الوحدات
+            if (!empty($unit_type)) {
+                $body .= "نوع الوحدة: $unit_type\n";
+            }
+            if (!empty($price)) {
+                $body .= "السعر: $price\n";
+            }
             $body .= "الرسالة: \n$message\n";
         }else{
             $body .= "رقم الهاتف: $phone\n";
@@ -60,6 +73,13 @@ function handle_contact_form() {
             }
             $body .= "البريد الإلكتروني: $email\n";
             $body .= "الوقت المفضل للتواصل: $preferred_time\n";
+            // إضافة الحقول الجديدة للفورم العادي
+            if (!empty($unit_type)) {
+                $body .= "نوع الوحدة: $unit_type\n";
+            }
+            if (!empty($price)) {
+                $body .= "السعر: $price\n";
+            }
             $body .= "الرسالة: \n$message\n";
         }
 
@@ -76,15 +96,16 @@ function handle_contact_form() {
 				'time_zone' => $timeZone,
 				'page_title' => $pageTitle,
 				'contact_methods' => $contact_methods,
+				'unit_type' => $unit_type,
+				'price' => $price,
 				'contacted' => 0, 
 			),
-			array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+			array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
 		);
 
 		if ($result === false) {
 			error_log("خطأ في إدخال البيانات: " . $wpdb->last_error);
 		}
-
 
         $post_email   = get_post_meta($post_id, 'contact_email', true);
         $custom_email = get_option('custom_email');
@@ -114,8 +135,6 @@ function handle_contact_form() {
     wp_die();
 }
 
-
-
 #############################
 ####  crate new tb in db
 #############################
@@ -126,6 +145,17 @@ function create_contact_form_table_on_theme_switch() {
     $table_name = esc_sql($wpdb->prefix . 'ib_contact_form_data');
 
     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") == $table_name) {
+        // التحقق من وجود الأعمدة الجديدة وإضافتها إذا لم تكن موجودة
+        $columns = $wpdb->get_col("DESCRIBE $table_name");
+        
+        if (!in_array('unit_type', $columns)) {
+            $wpdb->query("ALTER TABLE $table_name ADD COLUMN unit_type varchar(100) DEFAULT NULL");
+        }
+        
+        if (!in_array('price', $columns)) {
+            $wpdb->query("ALTER TABLE $table_name ADD COLUMN price varchar(50) DEFAULT NULL");
+        }
+        
         return;
     }
 
@@ -141,6 +171,8 @@ function create_contact_form_table_on_theme_switch() {
         time_zone varchar(100) DEFAULT NULL,
         page_title varchar(255) DEFAULT NULL,
         contact_methods text NOT NULL,
+        unit_type varchar(100) DEFAULT NULL,
+        price varchar(50) DEFAULT NULL,
         submission_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
         contacted tinyint(1) NOT NULL DEFAULT 0,
         PRIMARY KEY  (id)
@@ -156,7 +188,6 @@ function create_contact_form_table_on_theme_switch() {
     }
 }
 add_action('after_switch_theme', 'create_contact_form_table_on_theme_switch');
-
 
 #############################
 ####  admin page
@@ -203,9 +234,11 @@ function render_contact_form_admin_page() {
                 <th>الاسم</th>
                 <th>التايم زون</th>
                 <th>عنوان الصفحة</th>
+                <th>نوع الوحدة</th>
+                <th>السعر</th>
                 <th>تم التواصل</th>
                 <th>عرض الليد كامل</th>
-                <th>حذف</th> <!-- العمود الجديد -->
+                <th>حذف</th>
             </tr>
         </thead>';
     echo '<tbody>';
@@ -217,13 +250,15 @@ function render_contact_form_admin_page() {
             echo '<td>' . esc_html($row->name) . '</td>';
             echo '<td>' . esc_html($row->time_zone) . '</td>';
             echo '<td>' . esc_html($row->page_title) . '</td>';
+            echo '<td>' . esc_html($row->unit_type ?? 'غير محدد') . '</td>';
+            echo '<td>' . esc_html($row->price ?? 'غير محدد') . '</td>';
             echo '<td>' . ($row->contacted ? 'نعم' : 'لا') . '</td>';
             echo '<td><button class="open-popup" data-row=\'' . json_encode($row) . '\'>عرض</button></td>';
             echo '<td><button class="delete-lead" data-id="' . esc_attr($row->id) . '">حذف</button></td>';
             echo '</tr>';
         }
     } else {
-        echo '<tr><td colspan="7">No submissions found.</td></tr>';
+        echo '<tr><td colspan="9">No submissions found.</td></tr>';
     }
     
     echo '</tbody>';
@@ -254,11 +289,8 @@ function render_contact_form_admin_page() {
     }
 
     echo '</div>';
-
-
 }
 add_action('wp_ajax_update_contacted_status', 'update_contacted_status');
-
 
 // AJAX handler لحذف الليد
 add_action('wp_ajax_delete_lead', 'delete_lead_callback');
@@ -292,9 +324,6 @@ function delete_lead_callback() {
     wp_send_json_success('تم الحذف بنجاح');
 }
 
-
-
-
 function update_contacted_status() {
     if (!current_user_can('manage_options')) {
         wp_send_json_error(['message' => 'You do not have permission to perform this action.']);
@@ -324,8 +353,6 @@ function update_contacted_status() {
 
     wp_send_json_success(['message' => 'Status updated successfully.']);
 }
-
-
 
 function export_contact_form_data() {
     if (!current_user_can('manage_options')) {
@@ -357,7 +384,9 @@ function export_contact_form_data() {
         'Message', 
         'Time Zone', 
         'Page Title', 
-        'Contact Methods', 
+        'Contact Methods',
+        'Unit Type',
+        'Price', 
         'Submission Date', 
         'Contacted'
     ));
