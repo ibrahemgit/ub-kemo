@@ -2,7 +2,7 @@
 function check_theme_update_from_github_json($transient) {
 
     // تحديد اسم الثيم
-    $theme_slug = 'hello_Jinx';
+    $theme_slug = 'ub-kemo-main';
 
     // صفحات مسموح فيها التحقق من التحديث
     $allowed_pages = [
@@ -69,3 +69,4 @@ function check_theme_update_from_github_json($transient) {
 }
 
 add_filter('site_transient_update_themes', 'check_theme_update_from_github_json');
+
