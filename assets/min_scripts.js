@@ -104,18 +104,24 @@ jQuery(document).ready(function($) {
       }
     ]
   });
+	
 $('.gallry_logos').slick({
     rtl: true,
     autoplay: true,
-    accessibility: true,
-    dots: false,
+    autoplaySpeed: 0,             // التحريك يبدأ بدون انتظار
+    speed: 10000,                 // سرعة الحركة (كل ما زادت، الحركة أبطأ وأكثر سلاسة)
+    cssEase: 'linear',            // حركة ثابتة بدون توقف
     infinite: true,
-    speed: 500,
-    slidesToShow: 6, // عدد أكبر افتراضياً على الشاشات العريضة
+    slidesToShow: 6,
     slidesToScroll: 1,
-    centerMode: false, // إلغاء المركزية لتفادي المشاكل على الهواتف
-    variableWidth: false, // إلغاء الأحجام المتغيرة لجعل التخطيط أنظف
+    swipe: false,                 // منع السحب
+    touchMove: false,             // منع التحريك باللمس
+    draggable: false,             // منع السحب بالماوس
     arrows: false,
+    dots: false,                  // إخفاء النقاط
+    variableWidth: true,          // ضروري لو العناصر بأحجام مختلفة
+    pauseOnHover: false,
+    pauseOnFocus: false,
     responsive: [
         {
             breakpoint: 1024,
@@ -132,8 +138,7 @@ $('.gallry_logos').slick({
         {
             breakpoint: 480,
             settings: {
-                slidesToShow: 2,
-                arrows: false // يمكن إخفاء الأسهم في الشاشات الصغيرة
+                slidesToShow: 2
             }
         }
     ]
@@ -405,4 +410,5 @@ jQuery(document).ready(function ($) {
         }
     });
 });
+
 
