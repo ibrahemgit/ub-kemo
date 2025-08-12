@@ -1,9 +1,7 @@
 {
-    "version": "3.2.1",
+    "version": "3.1.0",
     "download_url": "https://github.com/ibrahemgit/ub-kemo/archive/refs/heads/main.zip",
     "details_url": "https://github.com/ibrahemgit/ub-kemo",
     "requires": "6.0",
     "requires_php": "7.4"
-
 }
-

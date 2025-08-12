@@ -20,6 +20,10 @@ function handle_submit_to_google_form() {
     $zone   = isset($_POST['zone']) ? sanitize_text_field($_POST['zone']) : '';
     $team   = isset($_POST['team']) ? sanitize_text_field($_POST['team']) : '';
     
+    // NEW: حقول إضافية
+$job  = isset($_POST['job']) ? sanitize_text_field($_POST['job']) : '';
+$area = isset($_POST['area']) ? sanitize_text_field($_POST['area']) : '';
+
     // الحقول الجديدة
     $unit_type = isset($_POST['unit_type']) ? sanitize_text_field($_POST['unit_type']) : '';
     $price = isset($_POST['price']) ? sanitize_text_field($_POST['price']) : '';
@@ -29,16 +33,25 @@ function handle_submit_to_google_form() {
         wp_send_json_error('الرجاء تعبئة جميع الحقول.');
     }
 
-    if (submit_to_google_form($name, $phone, $email, $title, $url, $zone, $team, $unit_type, $price, $preferred_time)) {
-        wp_send_json_success();
-    } else {
-        wp_send_json_error('فشل في الإرسال. يرجى المحاولة لاحقًا.');
-    }
+    if (submit_to_google_form(
+        $name, $phone, $email, $title, $url, $zone, $team,
+        $unit_type, $price, $preferred_time,
+        $job, $area // NEW
+    )) {
+    wp_send_json_success();
+} else {
+    wp_send_json_error('فشل في الإرسال. يرجى المحاولة لاحقًا.');
+}
+
 
     wp_die();
 }
 
-function submit_to_google_form($name, $phone, $email, $title, $url, $zone, $team, $unit_type = '', $price = '', $preferred_time = '') {
+function submit_to_google_form(
+    $name, $phone, $email, $title, $url, $zone, $team,
+    $unit_type = '', $price = '', $preferred_time = '',
+    $job = '', $area = '' // NEW
+) {
     $form_url = 'https://docs.google.com/forms/d/e/1FAIpQLSen9l9aAPnBQlCfJ3YrrUH9KQpWjbd8Wde0QQQ5BGeOGePVmQ/formResponse';
 
     $post_fields = array(
@@ -50,22 +63,29 @@ function submit_to_google_form($name, $phone, $email, $title, $url, $zone, $team
         'entry.297660856' => $team
     );
 
-    // إضافة الحقول الجديدة إذا كانت متوفرة (يجب إضافة entry IDs الصحيحة من Google Form)
-    if (!empty($email)) {
-        $post_fields['entry.EMAIL_ENTRY_ID'] = $email; // استبدل EMAIL_ENTRY_ID بالرقم الصحيح
-    }
-    
-    if (!empty($unit_type)) {
-        $post_fields['entry.UNIT_TYPE_ENTRY_ID'] = $unit_type; // استبدل UNIT_TYPE_ENTRY_ID بالرقم الصحيح
-    }
-    
-    if (!empty($price)) {
-        $post_fields['entry.PRICE_ENTRY_ID'] = $price; // استبدل PRICE_ENTRY_ID بالرقم الصحيح
-    }
-    
-    if (!empty($preferred_time)) {
-        $post_fields['entry.TIME_ENTRY_ID'] = $preferred_time; // استبدل TIME_ENTRY_ID بالرقم الصحيح
-    }
+// NEW: إرسال البريد لو متوفر
+if (!empty($email)) {
+    $post_fields['entry.EMAIL_ENTRY_ID'] = $email; // استبدل EMAIL_ENTRY_ID
+}
+
+// موجودة مسبقًا عندك للوحدة/السعر/الوقت:
+if (!empty($unit_type)) {
+    $post_fields['entry.UNIT_TYPE_ENTRY_ID'] = $unit_type; // استبدل UNIT_TYPE_ENTRY_ID
+}
+if (!empty($price)) {
+    $post_fields['entry.PRICE_ENTRY_ID'] = $price; // استبدل PRICE_ENTRY_ID
+}
+if (!empty($preferred_time)) {
+    $post_fields['entry.TIME_ENTRY_ID'] = $preferred_time; // استبدل TIME_ENTRY_ID
+}
+
+// NEW: الوظيفة والمنطقة
+if (!empty($job)) {
+    $post_fields['entry.JOB_ENTRY_ID'] = $job;   // استبدل JOB_ENTRY_ID
+}
+if (!empty($area)) {
+    $post_fields['entry.AREA_ENTRY_ID'] = $area; // استبدل AREA_ENTRY_ID
+}
 
     $post_fields = array_map('sanitize_text_field', $post_fields);
 

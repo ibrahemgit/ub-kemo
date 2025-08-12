@@ -7,10 +7,10 @@ add_action('wp_ajax_submit_contact_form', 'handle_contact_form');
 add_action('wp_ajax_nopriv_submit_contact_form', 'handle_contact_form'); 
 function handle_contact_form() {
 
-        if (empty($_POST['name']) || empty($_POST['phone']) ) {
-            return;
-            wp_die();
-        }
+if (empty($_POST['name']) || empty($_POST['phone'])) {
+    wp_die(); // أو اعمل wp_send_json_error قبلها لو حابب
+}
+
 
         $name = sanitize_text_field($_POST['name'] ?? "");
         $phone = sanitize_text_field($_POST['phone']?? "") ;
@@ -22,6 +22,10 @@ function handle_contact_form() {
         $contact_methods = !empty($_POST['contact']) ? implode(", ", array_map('sanitize_text_field', $_POST['contact'])) : 'لم يتم اختيار طريقه للتواصل';
         $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
         
+        $job  = sanitize_text_field($_POST['job']  ?? "");
+$area = sanitize_text_field($_POST['area'] ?? "");
+
+
         // الحقول الجديدة
         $unit_type = sanitize_text_field($_POST['unit_type'] ?? "");
         $price = sanitize_text_field($_POST['price'] ?? "");
@@ -44,24 +48,24 @@ function handle_contact_form() {
             $body .= "الدولة: $timeZone\n";
             $body .= "اسم الصفحة: $pageTitle\n";
             // إضافة الحقول الجديدة للفورم المختصر
-            if (!empty($unit_type)) {
-                $body .= "نوع الوحدة: $unit_type\n";
-            }
-            if (!empty($price)) {
-                $body .= "السعر: $price\n";
-            }
+            
+    if (!empty($unit_type)) $body .= "نوع الوحدة: $unit_type\n";
+    if (!empty($price))     $body .= "السعر: $price\n";
+    // NEW
+    if (!empty($job))  $body .= "الوظيفة: $job\n";
+    if (!empty($area)) $body .= "المنطقة: $area\n";
+
         } elseif(isset($_POST['is_unitform']) && $_POST['is_unitform'] === "1"){
             $body .= "رقم الهاتف: $phone\n";
             $body .= "الدولة: $timeZone\n";
             $body .= "اسم الصفحة: $pageTitle\n";
             // إضافة الحقول الجديدة لفورم الوحدات
-            if (!empty($unit_type)) {
-                $body .= "نوع الوحدة: $unit_type\n";
-            }
-            if (!empty($price)) {
-                $body .= "السعر: $price\n";
-            }
-            $body .= "الرسالة: \n$message\n";
+    if (!empty($unit_type)) $body .= "نوع الوحدة: $unit_type\n";
+    if (!empty($price))     $body .= "السعر: $price\n";
+    // NEW
+    if (!empty($job))  $body .= "الوظيفة: $job\n";
+    if (!empty($area)) $body .= "المنطقة: $area\n";
+
         }else{
             $body .= "رقم الهاتف: $phone\n";
             $body .= "الدولة: $timeZone\n";
@@ -74,12 +78,12 @@ function handle_contact_form() {
             $body .= "البريد الإلكتروني: $email\n";
             $body .= "الوقت المفضل للتواصل: $preferred_time\n";
             // إضافة الحقول الجديدة للفورم العادي
-            if (!empty($unit_type)) {
-                $body .= "نوع الوحدة: $unit_type\n";
-            }
-            if (!empty($price)) {
-                $body .= "السعر: $price\n";
-            }
+    if (!empty($unit_type)) $body .= "نوع الوحدة: $unit_type\n";
+    if (!empty($price))     $body .= "السعر: $price\n";
+
+    if (!empty($job))  $body .= "الوظيفة: $job\n";
+    if (!empty($area)) $body .= "المنطقة: $area\n";
+
             $body .= "الرسالة: \n$message\n";
         }
 

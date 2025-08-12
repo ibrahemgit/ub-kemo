@@ -104,24 +104,18 @@ jQuery(document).ready(function($) {
       }
     ]
   });
-	
 $('.gallry_logos').slick({
     rtl: true,
     autoplay: true,
-    autoplaySpeed: 0,             // التحريك يبدأ بدون انتظار
-    speed: 10000,                 // سرعة الحركة (كل ما زادت، الحركة أبطأ وأكثر سلاسة)
-    cssEase: 'linear',            // حركة ثابتة بدون توقف
+    accessibility: true,
+    dots: false,
     infinite: true,
-    slidesToShow: 6,
+    speed: 500,
+    slidesToShow: 6, // عدد أكبر افتراضياً على الشاشات العريضة
     slidesToScroll: 1,
-    swipe: false,                 // منع السحب
-    touchMove: false,             // منع التحريك باللمس
-    draggable: false,             // منع السحب بالماوس
+    centerMode: false, // إلغاء المركزية لتفادي المشاكل على الهواتف
+    variableWidth: false, // إلغاء الأحجام المتغيرة لجعل التخطيط أنظف
     arrows: false,
-    dots: false,                  // إخفاء النقاط
-    variableWidth: true,          // ضروري لو العناصر بأحجام مختلفة
-    pauseOnHover: false,
-    pauseOnFocus: false,
     responsive: [
         {
             breakpoint: 1024,
@@ -138,7 +132,8 @@ $('.gallry_logos').slick({
         {
             breakpoint: 480,
             settings: {
-                slidesToShow: 2
+                slidesToShow: 2,
+                arrows: false // يمكن إخفاء الأسهم في الشاشات الصغيرة
             }
         }
     ]
@@ -181,33 +176,38 @@ $('.contact_us .submit, .msvh_submit-btn, .submit-button').on('click', function(
     var post_id = $('body').attr('id');
     
     // جمع بيانات الفورم مع التعامل مع الحقول الجديدة
-    var formData = {
-        action: 'submit_contact_form', 
-        // الحقول الأساسية
-        name: form.find('input[name="name"]').val() || '', 
-        phone: form.find('input[name="phone"]').val() || '', 
-        email: form.find('input[name="email"]').val() || '', 
-        message: form.find('textarea[name="message"]').val() || '', 
-        
-        // حقول السيليكت المختلفة
-        preferred_time: form.find('select[name="preferred_time"]').val() || form.find('select[name="selc-time"]').val() || '', 
-        unit_type: form.find('select[name="unit_type"]').val() || '', 
-        
-        // حقل السعر الجديد
-        price: form.find('input[name="price"]').val() || '', 
-        
-        // الحقول القديمة (للتوافق مع الأنظمة القديمة)
-        contact: form.find('input[name="contact[]"]:checked').map(function() {
-            return $(this).val();
-        }).get(),
-        
-        // معلومات إضافية
-        is_prshorshort: ifprshorshort ? "1" : "0",
-        is_unitform: ifunitform ? "1" : "0",
-        timeZone: timeZone,
-        pageTitle: pageTitle,
-        post_id: post_id, 
-    };
+var formData = {
+    action: 'submit_contact_form',
+    // الحقول الأساسية
+    name: form.find('input[name="name"]').val() || '',
+    phone: form.find('input[name="phone"]').val() || '',
+    email: form.find('input[name="email"]').val() || '',
+    message: form.find('textarea[name="message"]').val() || '',
+
+    // NEW ↓↓↓
+    job: form.find('input[name="job"]').val() || '',   // حقل الوظيفة
+    area: form.find('select[name="area"]').val() || '', // (اختياري) المنطقة لأن عندك select باسم area
+
+    // حقول السيليكت المختلفة
+    preferred_time: form.find('select[name="preferred_time"]').val() || form.find('select[name="selc-time"]').val() || '',
+    unit_type: form.find('select[name="unit_type"]').val() || '',
+
+    // حقل السعر
+    price: form.find('input[name="price"]').val() || '',
+
+    // الحقول القديمة
+    contact: form.find('input[name="contact[]"]:checked').map(function() {
+        return $(this).val();
+    }).get(),
+
+    // معلومات إضافية
+    is_prshorshort: ifprshorshort ? "1" : "0",
+    is_unitform: ifunitform ? "1" : "0",
+    timeZone: timeZone,
+    pageTitle: pageTitle,
+    post_id: post_id,
+};
+
 
     // إرسال بيانات مبسطة لـ Google Form
     $.ajax({
@@ -215,18 +215,23 @@ $('.contact_us .submit, .msvh_submit-btn, .submit-button').on('click', function(
         type: 'POST',
         dataType: 'json',
         data: {
-            action: 'submit_to_google_form_action',
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            unit_type: formData.unit_type,
-            price: formData.price,
-            preferred_time: formData.preferred_time,
-            title: PTitle,
-            url: pUrl,
-            zone: timeZone,
-            team: ajax_object.author_name,
-        },
+    action: 'submit_to_google_form_action',
+    name: formData.name,
+    phone: formData.phone,
+    email: formData.email,
+    unit_type: formData.unit_type,
+    price: formData.price,
+    preferred_time: formData.preferred_time,
+    // NEW ↓↓↓
+    job: formData.job,
+    area: formData.area, // اختياري
+    // ثابت
+    title: PTitle,
+    url: pUrl,
+    zone: timeZone,
+    team: ajax_object.author_name,
+},
+
         success: function(response) {
             console.log('Google Form submitted successfully:', response);
         },
@@ -410,5 +415,4 @@ jQuery(document).ready(function ($) {
         }
     });
 });
-
 
