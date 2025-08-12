@@ -2,7 +2,7 @@
 function check_theme_update_from_github_json($transient) {
 
     // تحديد اسم الثيم
-    $theme_slug = 'hello_Jinx';
+    $theme_slug = 'ub-kemo-main';
 
     // صفحات مسموح فيها التحقق من التحديث
     $allowed_pages = [
@@ -28,7 +28,7 @@ function check_theme_update_from_github_json($transient) {
     $current_version = $theme_data->get('Version');
 
     // رابط ملف JSON على GitHub
-    $json_url = 'https://raw.githubusercontent.com/ibrahemgit/ub-kemo/refs/heads/main/theme-update.json';
+    $json_url = 'https://raw.githubusercontent.com/ibrahemgit/ub-kemo/main/theme-update.json';
 
     // جلب بيانات التحديث
     $response = wp_remote_get($json_url, array(
